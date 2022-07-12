@@ -1,13 +1,23 @@
-package com.example.petproject
+package com.example.petproject.model
 
-import java.time.LocalDateTime
+import org.bson.types.ObjectId
+import org.springframework.data.annotation.Id
+import org.springframework.data.mongodb.core.mapping.DBRef
+import org.springframework.data.mongodb.core.mapping.Document
+import java.time.LocalDate
+import java.util.*
 
 @Document
-data class Patient (
+data class Task(
     @Id
     val id: ObjectId = ObjectId.get(),
-    val name: String,
-    val description: String,
-    val createdDate: LocalDateTime = LocalDateTime.now(),
-    val modifiedDate: LocalDateTime = LocalDateTime.now()
+    var date: LocalDate,
+    @DBRef
+    var point: Point = Point(),
+    @DBRef
+    var positions: List<Position>,
+    @DBRef
+    var consumables: List<Consumables>,
+    @DBRef
+    var persons: List<Person>
 )
