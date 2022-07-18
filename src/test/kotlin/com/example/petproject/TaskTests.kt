@@ -137,4 +137,17 @@ class TaskTests @Autowired constructor(
         assertEquals(204, delete.statusCode.value())
         assertThrows(NoSuchElementException::class.java) { taskRepository.findById(defaultTaskId).get() }
     }
+
+    @Test
+    fun `should return list of task after date`() {
+        saveOneTask()
+
+        val response = restTemplate.getForEntity(
+            getRootUrl() + "/getTaskAfterDate/${LocalDate.now()}", List::class.java
+        )
+
+        assertEquals(200, response.statusCode.value())
+        assertNotNull(response.body)
+        assertEquals(1, response.body?.size)
+    }
 }

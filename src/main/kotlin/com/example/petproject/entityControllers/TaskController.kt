@@ -7,10 +7,12 @@ import com.example.petproject.repository.*
 import com.example.petproject.jsonMapping.requests.PositionRequest
 import com.example.petproject.jsonMapping.requests.TaskRequest
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException
+import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
+import java.time.LocalDate
 
 @RestController
 @RequestMapping("/api/v1")
@@ -31,6 +33,13 @@ class TaskController(
 
         val task = taskRepository.findById(taskId).orElseThrow { NotFoundException() }
         return ResponseEntity.ok().body(convertTaskToTaskAnswer(task))
+    }
+
+    @GetMapping("/tasks/getTaskAfterDate/{date}")
+    fun getTaskAfterDate(@PathVariable(value = "date")  date: String): ResponseEntity<List<TaskAnswer>> {
+        val temp = mutableListOf<TaskAnswer>()
+        val task = taskRepository.findTasksAfterDate(LocalDate.parse(date)).forEach { e -> temp.add(convertTaskToTaskAnswer(e)) }
+        return ResponseEntity.ok(temp)
     }
 
     @PostMapping("/tasks")
