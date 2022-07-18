@@ -4,20 +4,17 @@ import org.bson.types.ObjectId
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.DBRef
 import org.springframework.data.mongodb.core.mapping.Document
+import org.springframework.format.annotation.DateTimeFormat
 import java.time.LocalDate
-import java.util.*
 
 @Document
 data class Task(
     @Id
     val id: ObjectId = ObjectId.get(),
-    var date: LocalDate,
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    var date: LocalDate = LocalDate.now(),
     @DBRef
-    var point: Point = Point(),
+    var point: Point? = null,
     @DBRef
-    var positions: List<Position>,
-    @DBRef
-    var consumables: List<Consumables>,
-    @DBRef
-    var persons: List<Person>
+    var positions: MutableList<Position> = mutableListOf()
 )

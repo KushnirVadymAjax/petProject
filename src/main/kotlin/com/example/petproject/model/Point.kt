@@ -1,6 +1,5 @@
 package com.example.petproject.model
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import org.bson.types.ObjectId
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
@@ -18,5 +17,6 @@ data class Point(
     var longitude: Double = 0.0,
     var contactPerson: String = "",
     var contactNumber: String = "",
-    var comment: String = ""
+    var comment: String = "",
+    val taskList: MutableList<Task>? = mutableListOf()
 )

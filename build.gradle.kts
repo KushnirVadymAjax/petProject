@@ -23,8 +23,6 @@ dependencies {
     implementation("com.github.sirayan.genericdb-mongo:generic-db:0.0.3")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     implementation ("org.mongodb:mongodb-driver-sync:4.6.0")
-    implementation ("javax.servlet:jstl:1.2")
-
 }
 
 tasks.withType<KotlinCompile> {

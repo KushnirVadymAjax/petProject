@@ -1,13 +1,10 @@
-package com.example.petproject.controllers.entityControllers
+package com.example.petproject.entityControllers
 
-import com.example.petproject.answers.PointAnswer
+import com.example.petproject.jsonMapping.answers.PointAnswer
 import com.example.petproject.model.Point
 import com.example.petproject.repository.PointRepository
-import com.example.petproject.requests.PointRequest
-import org.slf4j.LoggerFactory
+import com.example.petproject.jsonMapping.requests.PointRequest
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException
-
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
@@ -16,14 +13,11 @@ import java.util.*
 
 @RestController
 @RequestMapping("/api/v1")
-class PointController {
-    @Autowired
-    private val pointRepository: PointRepository? = null
-
+class PointController(private val pointRepository: PointRepository) {
     @GetMapping("/points")
     fun getAllPoints(): List<PointAnswer> {
         val temp = mutableListOf<PointAnswer>()
-        pointRepository!!.findAll().forEach { e ->
+        pointRepository.findAll().forEach { e ->
             temp.add(
                 PointAnswer(
                     e.id.toString(), e.name, e.adress, e.latitude, e.longitude, e.contactPerson
@@ -36,7 +30,7 @@ class PointController {
 
     @GetMapping("/point/{id}")
     fun getPointById(@PathVariable(value = "id") pointId: String): ResponseEntity<PointAnswer> {
-        val point: Point = pointRepository!!.findById(pointId).orElseThrow { NotFoundException() }
+        val point: Point = pointRepository.findById(pointId).orElseThrow { NotFoundException() }
         return ResponseEntity.ok().body<PointAnswer>(
             PointAnswer(
                 point.id.toString(), point.name, point.adress, point.latitude, point.longitude, point.contactPerson
@@ -48,7 +42,6 @@ class PointController {
     @PostMapping("/point")
     fun addPoint(@Validated @RequestBody requestBody: PointRequest): ResponseEntity<PointAnswer> {
 
-        LOGGER.info("Request body:$requestBody")
         val point: Point = Point(
             name = requestBody.name,
             adress = requestBody.adress,
@@ -59,26 +52,22 @@ class PointController {
             longitude = requestBody.longitude
         )
         return try {
-            pointRepository!!.save(point)
+            pointRepository.save(point)
             return ResponseEntity.ok().body<PointAnswer>(
                 PointAnswer(
                     point.id.toString(), point.name, point.adress, point.latitude, point.longitude, point.contactPerson
                 )
             )
         } catch (e: Exception) {
-            LOGGER.error(Arrays.toString(e.stackTrace))
             ResponseEntity<PointAnswer>(null, HttpStatus.BAD_GATEWAY)
         }
     }
 
     @PutMapping("/point/{id}")
     fun updatePoint(
-        @PathVariable(value = "id") pointId: String,
-        @Validated @RequestBody requestBody: PointRequest
+        @PathVariable(value = "id") pointId: String, @Validated @RequestBody requestBody: PointRequest
     ): ResponseEntity<PointAnswer> {
-
-        LOGGER.info("Request body:$requestBody")
-        val point: Point = pointRepository!!.findById(pointId).orElseThrow { NotFoundException() }
+        val point: Point = pointRepository.findById(pointId).orElseThrow { NotFoundException() }
 
         point.adress = requestBody.adress
         point.comment = requestBody.comment
@@ -105,14 +94,11 @@ class PointController {
     @DeleteMapping("/point/{id}")
     fun deletePoint(@PathVariable(value = "id") pointId: String): Map<String, Boolean> {
 
-        val point: Point = pointRepository!!.findById(pointId).orElseThrow { NotFoundException() }
+        val point: Point = pointRepository.findById(pointId).orElseThrow { NotFoundException() }
         pointRepository.delete(point)
         val response: MutableMap<String, Boolean> = HashMap()
         response["deleted"] = java.lang.Boolean.TRUE
         return response
     }
 
-    companion object {
-        private val LOGGER = LoggerFactory.getLogger(PointController::class.java)
-    }
 }

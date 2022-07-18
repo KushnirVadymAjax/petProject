@@ -1,9 +1,8 @@
-package com.example.petproject.answers
+package com.example.petproject.jsonMapping.requests
 
 import org.springframework.format.annotation.NumberFormat
 
-class PointAnswer(
-    val id: String,
+class PointRequest(
     var name: String,
     var adress: String = "",
     @NumberFormat(pattern = "##,##0.00000")
