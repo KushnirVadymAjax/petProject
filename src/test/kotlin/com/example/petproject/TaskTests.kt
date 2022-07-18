@@ -3,7 +3,10 @@ package com.example.petproject
 import com.example.petproject.jsonMapping.answers.TaskAnswer
 import com.example.petproject.jsonMapping.requests.PositionRequest
 import com.example.petproject.jsonMapping.requests.TaskRequest
+import com.example.petproject.model.Point
 import com.example.petproject.model.Task
+import com.example.petproject.repository.PointRepository
+import com.example.petproject.repository.PositionRepository
 import com.example.petproject.repository.TaskRepository
 import org.bson.types.ObjectId
 import org.junit.jupiter.api.Assertions.*
@@ -15,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.test.web.server.LocalServerPort
-import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
@@ -23,16 +25,18 @@ import org.springframework.http.ResponseEntity
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.time.LocalDate
 import java.util.NoSuchElementException
-import java.util.Optional
-import kotlin.reflect.jvm.internal.impl.load.java.lazy.descriptors.DeclaredMemberIndex.Empty
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ExtendWith(SpringExtension::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class PetProjectApplicationTests @Autowired constructor(
-    private val taskRepository: TaskRepository, private val restTemplate: TestRestTemplate
+class TaskTests @Autowired constructor(
+    private val taskRepository: TaskRepository,
+    private val restTemplate: TestRestTemplate,
+    private val pointRepository: PointRepository,
+    private val positionRepository: PositionRepository
 ) {
     private val defaultTaskId = ObjectId.get()
+    private val defaultPointId = ObjectId.get()
 
     @LocalServerPort
     protected var port: Int = 0
@@ -40,16 +44,22 @@ class PetProjectApplicationTests @Autowired constructor(
     @BeforeEach
     fun setUp() {
         taskRepository.deleteAll()
+        pointRepository.deleteAll()
+        positionRepository.deleteAll()
     }
 
     private fun getRootUrl(): String? = "http://localhost:$port/api/v1/tasks"
 
     private fun saveOneTask() = taskRepository.save(Task(defaultTaskId, LocalDate.now()))
 
-    private fun prepareTaskRequest() = TaskRequest(
-        LocalDate.now(),
-        positions = mutableListOf(PositionRequest("des1", "com1"))
-    )
+    private fun prepareTaskRequest():TaskRequest {
+        pointRepository.save(Point(defaultPointId))
+        return TaskRequest(
+            LocalDate.now(),
+            positions = mutableListOf(PositionRequest("des1", "com1")),
+            pointID = defaultPointId.toString()
+        )
+    }
 
     @Test
     fun `should return all tasks`() {
@@ -89,6 +99,7 @@ class PetProjectApplicationTests @Autowired constructor(
         assertEquals(201, response.statusCode.value())
         assertNotNull(response.body)
         assertNotNull(response.body?.id)
+        assertEquals(taskRequest.pointID, response.body?.pointID)
         assertEquals(taskRequest.positions.size, response.body?.positions?.size)
     }
 
@@ -107,6 +118,8 @@ class PetProjectApplicationTests @Autowired constructor(
 
         assertEquals(200, updateResponse.statusCode.value())
         assertEquals(defaultTaskId, updatedTask.id)
+        if (taskRequest.pointID != "")
+        assertEquals(taskRequest.pointID,updatedTask.point?.id.toString())
         assertEquals(taskRequest.positions.size, updatedTask.positions.size)
     }
 

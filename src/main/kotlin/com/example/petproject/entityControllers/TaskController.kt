@@ -22,7 +22,7 @@ class TaskController(
     @GetMapping("/tasks")
     fun getAllTasks(): ResponseEntity<List<TaskAnswer>> {
         val temp = mutableListOf<TaskAnswer>()
-        taskRepository.findAll().forEach { e -> temp.add(conwertTaskToTaskAnswer(e)) }
+        taskRepository.findAll().forEach { e -> temp.add(convertTaskToTaskAnswer(e)) }
         return ResponseEntity.ok(temp)
     }
 
@@ -30,7 +30,7 @@ class TaskController(
     fun getTaskById(@PathVariable(value = "id") taskId: String): ResponseEntity<TaskAnswer> {
 
         val task = taskRepository.findById(taskId).orElseThrow { NotFoundException() }
-        return ResponseEntity.ok().body(conwertTaskToTaskAnswer(task))
+        return ResponseEntity.ok().body(convertTaskToTaskAnswer(task))
     }
 
     @PostMapping("/tasks")
@@ -40,7 +40,7 @@ class TaskController(
             date = requestBody.date
         )
 
-        val positions = conwertPositionRequestToPosition(requestBody.positions, tempTask)
+        val positions = convertPositionRequestToPosition(requestBody.positions, tempTask)
 
         var point: Point? = null
         val tempPoint = pointRepository.findById(requestBody.pointID)
@@ -54,7 +54,7 @@ class TaskController(
 
         return try {
             taskRepository.save(tempTask)
-            return ResponseEntity(conwertTaskToTaskAnswer(tempTask), HttpStatus.CREATED)
+            return ResponseEntity(convertTaskToTaskAnswer(tempTask), HttpStatus.CREATED)
         } catch (e: Exception) {
             ResponseEntity(null, HttpStatus.BAD_GATEWAY)
         }
@@ -67,7 +67,7 @@ class TaskController(
 
         val task = taskRepository.findById(taskId).orElseThrow { NotFoundException() }
 
-        val positions = conwertPositionRequestToPosition(requestBody.positions, task)
+        val positions = convertPositionRequestToPosition(requestBody.positions, task)
 
 
         var point: Point? = null
@@ -84,7 +84,7 @@ class TaskController(
 
         return try {
             taskRepository.save(task)
-            return ResponseEntity(conwertTaskToTaskAnswer(task), HttpStatus.OK)
+            return ResponseEntity(convertTaskToTaskAnswer(task), HttpStatus.OK)
         } catch (e: Exception) {
             ResponseEntity(null, HttpStatus.BAD_GATEWAY)
         }
@@ -101,7 +101,6 @@ class TaskController(
             positionRepository.delete(pos)
         }
 
-
         if (task.point != null) {
             val point = pointRepository.findPointByTaskListContaining(task)
             pointRepository.delete(point)
@@ -112,7 +111,7 @@ class TaskController(
 
     }
 
-    fun conwertPositionRequestToPosition(positions: List<PositionRequest>, task: Task): MutableList<Position> {
+    fun convertPositionRequestToPosition(positions: List<PositionRequest>, task: Task): MutableList<Position> {
         val temp = mutableListOf<Position>()
         for (pos in positions) {
             val tempPosition = Position(description = pos.description, comment = pos.comment, task = task)
@@ -122,18 +121,16 @@ class TaskController(
         return temp
     }
 
-
-    fun conwertTaskToTaskAnswer(task: Task): TaskAnswer {
+    fun convertTaskToTaskAnswer(task: Task): TaskAnswer {
         return TaskAnswer(
             task.id.toString(),
             task.date,
             task.point?.id.toString(),
-            conwertPositionsToPositionAnswer(task.positions)
+            convertPositionsToPositionAnswer(task.positions)
         )
-
     }
 
-    fun conwertPositionsToPositionAnswer(positions: List<Position>): MutableList<PositionAnswer> {
+    fun convertPositionsToPositionAnswer(positions: List<Position>): MutableList<PositionAnswer> {
         val temp = mutableListOf<PositionAnswer>()
         for (pos in positions) {
             val tempPosition =
@@ -142,5 +139,4 @@ class TaskController(
         }
         return temp
     }
-
 }

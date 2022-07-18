@@ -15,7 +15,7 @@ import java.util.*
 @RequestMapping("/api/v1")
 class PointController(private val pointRepository: PointRepository) {
     @GetMapping("/points")
-    fun getAllPoints(): List<PointAnswer> {
+    fun getAllPoints(): ResponseEntity<List<PointAnswer>> {
         val temp = mutableListOf<PointAnswer>()
         pointRepository.findAll().forEach { e ->
             temp.add(
@@ -24,25 +24,22 @@ class PointController(private val pointRepository: PointRepository) {
                 )
             )
         }
-
-        return temp
+        return ResponseEntity.ok(temp)
     }
 
-    @GetMapping("/point/{id}")
+    @GetMapping("/points/{id}")
     fun getPointById(@PathVariable(value = "id") pointId: String): ResponseEntity<PointAnswer> {
         val point: Point = pointRepository.findById(pointId).orElseThrow { NotFoundException() }
-        return ResponseEntity.ok().body<PointAnswer>(
+        return ResponseEntity.ok().body(
             PointAnswer(
                 point.id.toString(), point.name, point.adress, point.latitude, point.longitude, point.contactPerson
             )
         )
-
     }
 
-    @PostMapping("/point")
+    @PostMapping("/points")
     fun addPoint(@Validated @RequestBody requestBody: PointRequest): ResponseEntity<PointAnswer> {
-
-        val point: Point = Point(
+        val point = Point(
             name = requestBody.name,
             adress = requestBody.adress,
             comment = requestBody.comment,
@@ -53,17 +50,17 @@ class PointController(private val pointRepository: PointRepository) {
         )
         return try {
             pointRepository.save(point)
-            return ResponseEntity.ok().body<PointAnswer>(
+            return ResponseEntity(
                 PointAnswer(
                     point.id.toString(), point.name, point.adress, point.latitude, point.longitude, point.contactPerson
-                )
+                ), HttpStatus.CREATED
             )
         } catch (e: Exception) {
             ResponseEntity<PointAnswer>(null, HttpStatus.BAD_GATEWAY)
         }
     }
 
-    @PutMapping("/point/{id}")
+    @PutMapping("/points/{id}")
     fun updatePoint(
         @PathVariable(value = "id") pointId: String, @Validated @RequestBody requestBody: PointRequest
     ): ResponseEntity<PointAnswer> {
@@ -76,29 +73,31 @@ class PointController(private val pointRepository: PointRepository) {
         point.longitude = requestBody.longitude
         point.latitude = requestBody.latitude
         point.contactPerson = requestBody.contactPerson
+        return try {
+            val updatedPoint: Point = pointRepository.save(point)
 
-        val updatedPoint: Point = pointRepository.save(point)
-
-        return ResponseEntity.ok<PointAnswer>(
-            PointAnswer(
-                updatedPoint.id.toString(),
-                updatedPoint.name,
-                updatedPoint.adress,
-                updatedPoint.latitude,
-                updatedPoint.longitude,
-                updatedPoint.contactPerson
+            return ResponseEntity(
+                PointAnswer(
+                    updatedPoint.id.toString(),
+                    updatedPoint.name,
+                    updatedPoint.adress,
+                    updatedPoint.latitude,
+                    updatedPoint.longitude,
+                    updatedPoint.contactPerson
+                ), HttpStatus.OK
             )
-        )
+        } catch (e: Exception) {
+            ResponseEntity(null, HttpStatus.BAD_GATEWAY)
+        }
+
     }
 
-    @DeleteMapping("/point/{id}")
-    fun deletePoint(@PathVariable(value = "id") pointId: String): Map<String, Boolean> {
-
+    @DeleteMapping("/points/{id}")
+    fun deletePoint(@PathVariable(value = "id") pointId: String): ResponseEntity<Unit> {
         val point: Point = pointRepository.findById(pointId).orElseThrow { NotFoundException() }
         pointRepository.delete(point)
         val response: MutableMap<String, Boolean> = HashMap()
         response["deleted"] = java.lang.Boolean.TRUE
-        return response
+        return ResponseEntity.noContent().build()
     }
-
 }
