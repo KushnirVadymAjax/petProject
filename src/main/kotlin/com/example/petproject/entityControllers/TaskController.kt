@@ -38,7 +38,7 @@ class TaskController(
     @GetMapping("/tasks/getTaskAfterDate/{date}")
     fun getTaskAfterDate(@PathVariable(value = "date")  date: String): ResponseEntity<List<TaskAnswer>> {
         val temp = mutableListOf<TaskAnswer>()
-        val task = taskRepository.findTasksAfterDate(LocalDate.parse(date)).forEach { e -> temp.add(convertTaskToTaskAnswer(e)) }
+        taskRepository.findTasksAfterDate(LocalDate.parse(date)).forEach { e -> temp.add(convertTaskToTaskAnswer(e)) }
         return ResponseEntity.ok(temp)
     }
 
