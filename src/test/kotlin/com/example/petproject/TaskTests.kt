@@ -141,7 +141,6 @@ class TaskTests @Autowired constructor(
     @Test
     fun `should return list of task after date`() {
         saveOneTask()
-
         val response = restTemplate.getForEntity(
             getRootUrl() + "/getTaskAfterDate/${LocalDate.now()}", List::class.java
         )

@@ -96,7 +96,7 @@ class PointTests @Autowired constructor(
     }
 
     @Test
-    fun `should update existing task`() {
+    fun `should update existing point`() {
         saveOnePoint()
         val pointRequest = preparePointRequest()
 
@@ -115,7 +115,7 @@ class PointTests @Autowired constructor(
     }
 
     @Test
-    fun `should delete existing task`() {
+    fun `should delete existing point`() {
         saveOnePoint()
 
         val delete = restTemplate.exchange(
