@@ -29,7 +29,7 @@ import java.util.NoSuchElementException
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ExtendWith(SpringExtension::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class TaskTests @Autowired constructor(
+class TaskTests(
     private val taskRepository: TaskRepository,
     private val restTemplate: TestRestTemplate,
     private val pointRepository: PointRepository,

@@ -32,7 +32,6 @@ import java.util.NoSuchElementException
 class PositionTests @Autowired constructor(
     private val taskRepository: TaskRepository,
     private val restTemplate: TestRestTemplate,
-    private val pointRepository: PointRepository,
     private val positionRepository: PositionRepository
 ) {
     private val defaultTaskId = ObjectId.get()
