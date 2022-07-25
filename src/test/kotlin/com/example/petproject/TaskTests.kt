@@ -29,12 +29,19 @@ import java.util.NoSuchElementException
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ExtendWith(SpringExtension::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class TaskTests(
-    private val taskRepository: TaskRepository,
-    private val restTemplate: TestRestTemplate,
-    private val pointRepository: PointRepository,
-    private val positionRepository: PositionRepository
-) {
+class TaskTests {
+    @Autowired
+    private lateinit var restTemplate: TestRestTemplate
+
+    @Autowired
+    private lateinit var taskRepository: TaskRepository
+
+    @Autowired
+    private lateinit var pointRepository: PointRepository
+
+    @Autowired
+    private lateinit var positionRepository: PositionRepository
+
     private val defaultTaskId = ObjectId.get()
     private val defaultPointId = ObjectId.get()
 
@@ -48,11 +55,11 @@ class TaskTests(
         positionRepository.deleteAll()
     }
 
-    private fun getRootUrl(): String? = "http://localhost:$port/api/v1/tasks"
+    private fun getRootUrl(): String = "http://localhost:$port/api/v1/tasks"
 
     private fun saveOneTask() = taskRepository.save(Task(defaultTaskId, LocalDate.now()))
 
-    private fun prepareTaskRequest():TaskRequest {
+    private fun prepareTaskRequest(): TaskRequest {
         pointRepository.save(Point(defaultPointId))
         return TaskRequest(
             LocalDate.now(),
@@ -119,7 +126,7 @@ class TaskTests(
         assertEquals(200, updateResponse.statusCode.value())
         assertEquals(defaultTaskId, updatedTask.id)
         if (taskRequest.pointID != "")
-        assertEquals(taskRequest.pointID,updatedTask.point?.id.toString())
+            assertEquals(taskRequest.pointID, updatedTask.point?.id.toString())
         assertEquals(taskRequest.positions.size, updatedTask.positions.size)
     }
 

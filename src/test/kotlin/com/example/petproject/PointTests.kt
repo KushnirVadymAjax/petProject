@@ -1,15 +1,10 @@
 package com.example.petproject
 
 import com.example.petproject.jsonMapping.answers.PointAnswer
-import com.example.petproject.jsonMapping.answers.TaskAnswer
 import com.example.petproject.jsonMapping.requests.PointRequest
-import com.example.petproject.jsonMapping.requests.PositionRequest
-import com.example.petproject.jsonMapping.requests.TaskRequest
 import com.example.petproject.model.Point
 import com.example.petproject.model.Task
 import com.example.petproject.repository.PointRepository
-import com.example.petproject.repository.PositionRepository
-import com.example.petproject.repository.TaskRepository
 import org.bson.types.ObjectId
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -25,16 +20,17 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import java.time.LocalDate
 import java.util.NoSuchElementException
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ExtendWith(SpringExtension::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class PointTests(
-    private val restTemplate: TestRestTemplate,
-    private val pointRepository: PointRepository
-) {
+class PointTests{
+    @Autowired
+    private lateinit var restTemplate: TestRestTemplate
+
+    @Autowired
+    private lateinit var pointRepository: PointRepository
 
     private val defaultPointId = ObjectId.get()
 
@@ -46,7 +42,7 @@ class PointTests(
         pointRepository.deleteAll()
     }
 
-    private fun getRootUrl(): String? = "http://localhost:$port/api/v1/points"
+    private fun getRootUrl(): String = "http://localhost:$port/api/v1/points"
 
     private fun saveOnePoint() = pointRepository.save(Point(defaultPointId))
 
