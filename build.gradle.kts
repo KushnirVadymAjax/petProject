@@ -25,6 +25,11 @@ dependencies {
     implementation ("org.mongodb:mongodb-driver-sync:4.6.0")
     implementation("org.springframework.data:spring-data-mongodb:3.4.2")
 
+    implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
+    testImplementation("io.projectreactor:reactor-test")
 }
 
 tasks.withType<KotlinCompile> {

@@ -5,37 +5,40 @@ import com.example.petproject.jsonMapping.requests.PointRequest
 import com.example.petproject.model.Point
 import com.example.petproject.repository.PointRepository
 import com.example.petproject.services.PointService
+import org.bson.types.ObjectId
 import org.springframework.data.crossstore.ChangeSetPersister
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
-import java.util.HashMap
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
+import reactor.kotlin.core.publisher.switchIfEmpty
+import java.time.Duration
 
 @Service
 class PointServiceImpl(val pointRepository: PointRepository) : PointService {
 
-    override fun getAllPoints(): ResponseEntity<List<PointAnswer>> {
-        val temp = mutableListOf<PointAnswer>()
-        pointRepository.findAll().forEach { e ->
-            temp.add(
+    override fun getAllPoints(): Flux<PointAnswer> {
+
+        return pointRepository.findAll()
+            .map { e ->
                 PointAnswer(
                     e.id.toString(), e.name, e.adress, e.latitude, e.longitude, e.contactPerson
                 )
+            }.delayElements(Duration.ofSeconds(1))
+    }
+
+
+    override fun getPointById(pointId: ObjectId): Mono<PointAnswer> =
+        pointRepository.findById(pointId).map { e ->
+            PointAnswer(
+                e.id.toString(), e.name, e.adress, e.latitude, e.longitude, e.contactPerson
+            )
+        }.switchIfEmpty {
+            Mono.error(
+                ChangeSetPersister.NotFoundException()
             )
         }
-        return ResponseEntity.ok(temp)
-    }
 
-    override fun getPointById(pointId: String): ResponseEntity<PointAnswer> {
-        val point: Point = pointRepository.findById(pointId).orElseThrow { ChangeSetPersister.NotFoundException() }
-        return ResponseEntity.ok().body(
-            PointAnswer(
-                point.id.toString(), point.name, point.adress, point.latitude, point.longitude, point.contactPerson
-            )
-        )
-    }
-
-    override fun addPoint(requestBody: PointRequest): ResponseEntity<PointAnswer> {
+    override fun addPoint(requestBody: PointRequest): Mono<PointAnswer> {
         val point = Point(
             name = requestBody.name,
             adress = requestBody.adress,
@@ -45,52 +48,45 @@ class PointServiceImpl(val pointRepository: PointRepository) : PointService {
             latitude = requestBody.latitude,
             longitude = requestBody.longitude
         )
-        return try {
-            pointRepository.save(point)
-            return ResponseEntity(
-                PointAnswer(
-                    point.id.toString(), point.name, point.adress, point.latitude, point.longitude, point.contactPerson
-                ), HttpStatus.CREATED
+        return pointRepository.save(point).map { e ->
+            PointAnswer(
+                e.id.toString(), e.name, e.adress, e.latitude, e.longitude, e.contactPerson
             )
-        } catch (e: Exception) {
-            ResponseEntity<PointAnswer>(null, HttpStatus.BAD_GATEWAY)
         }
     }
 
-    override fun updatePoint(pointId: String, requestBody: PointRequest): ResponseEntity<PointAnswer> {
-        val point: Point = pointRepository.findById(pointId).orElseThrow { ChangeSetPersister.NotFoundException() }
+    override fun updatePoint(pointId: ObjectId, requestBody: PointRequest): Mono<PointAnswer> {
+        val point = pointRepository.findById(pointId)
 
-        point.adress = requestBody.adress
-        point.comment = requestBody.comment
-        point.contactNumber = requestBody.contactNumber
-        point.name = requestBody.name
-        point.longitude = requestBody.longitude
-        point.latitude = requestBody.latitude
-        point.contactPerson = requestBody.contactPerson
-        return try {
-            val updatedPoint: Point = pointRepository.save(point)
 
-            return ResponseEntity(
-                PointAnswer(
-                    updatedPoint.id.toString(),
-                    updatedPoint.name,
-                    updatedPoint.adress,
-                    updatedPoint.latitude,
-                    updatedPoint.longitude,
-                    updatedPoint.contactPerson
-                ), HttpStatus.OK
+
+        return point.flatMap {
+            pointRepository.save(it.apply {
+                it.adress = requestBody.adress
+                it.comment = requestBody.comment
+                it.contactNumber = requestBody.contactNumber
+                it.name = requestBody.name
+                it.longitude = requestBody.longitude
+                it.latitude = requestBody.latitude
+                it.contactPerson = requestBody.contactPerson
+            })
+        }.map { e ->
+            PointAnswer(
+                e.id.toString(), e.name, e.adress, e.latitude, e.longitude, e.contactPerson
             )
-        } catch (e: Exception) {
-            ResponseEntity(null, HttpStatus.BAD_GATEWAY)
         }
     }
 
-    override fun deletePoint(pointId: String): ResponseEntity<Unit> {
-        val point: Point = pointRepository.findById(pointId).orElseThrow { ChangeSetPersister.NotFoundException() }
-        pointRepository.delete(point)
-        val response: MutableMap<String, Boolean> = HashMap()
-        response["deleted"] = java.lang.Boolean.TRUE
-        return ResponseEntity.noContent().build()
+    override fun deletePoint(pointId: ObjectId): Mono<Void> {
+
+        return pointRepository.findById(pointId)
+            .switchIfEmpty {
+                Mono.error(
+                    ChangeSetPersister.NotFoundException()
+                )
+            }
+            .flatMap(pointRepository::delete)
+
 
     }
 }

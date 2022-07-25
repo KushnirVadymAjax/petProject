@@ -1,11 +1,11 @@
 package com.example.petproject.services
 
 import com.example.petproject.jsonMapping.answers.PositionAnswer
-import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 
 interface PositionService {
-    fun getAllPositions(): ResponseEntity<List<PositionAnswer>>
+    fun getAllPositions(): Flux<PositionAnswer>
 
-    fun deleteAllPositions(): ResponseEntity<Unit>
+    fun deleteAllPositions(): Mono<Void>
 }

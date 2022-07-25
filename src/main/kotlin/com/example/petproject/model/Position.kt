@@ -8,8 +8,7 @@ import org.springframework.data.mongodb.core.mapping.Document
 data class Position(
     @Id val id: ObjectId = ObjectId.get(),
     val description: String,
-    val comment: String = "",
-    var task: Task
+    val comment: String = ""
 )
 
 

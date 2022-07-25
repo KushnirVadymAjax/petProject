@@ -6,6 +6,6 @@ import java.time.LocalDate
 
 interface TaskCustomRepository {
 
-    fun findTasksAfterDate(date:LocalDate):List<Task>
+//    fun findTasksAfterDate(date:LocalDate):List<Task>
 
 }

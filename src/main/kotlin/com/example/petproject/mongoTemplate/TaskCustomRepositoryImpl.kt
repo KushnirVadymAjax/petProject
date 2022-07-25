@@ -6,15 +6,16 @@ import org.springframework.data.mongodb.core.find
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.stereotype.Repository
+import reactor.core.publisher.Flux
 import java.time.LocalDate
 
 
 @Repository
 class TaskCustomRepositoryImpl(var mongoTemplate: MongoTemplate):TaskCustomRepository{
-    override fun findTasksAfterDate(date: LocalDate): List<Task> {
-        val query = Query()
-        query.addCriteria(Criteria.where("date").gte(date))
-        return mongoTemplate.find<Task>(query)
-    }
+//    override fun findTasksAfterDate(date: LocalDate): Flux<Task> {
+//        val query = Query()
+//        query.addCriteria(Criteria.where("date").gte(date))
+//        return mongoTemplate.find<Task>(query)
+//    }
 
 }

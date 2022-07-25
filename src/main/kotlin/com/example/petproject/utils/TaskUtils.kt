@@ -8,11 +8,11 @@ import com.example.petproject.model.Task
 
 class TaskUtils() {
     companion object {
-        fun convertPositionRequestToPosition(positions: List<PositionRequest>, task: Task): MutableList<Position> {
+        fun convertPositionRequestToPosition(positions: List<PositionRequest>): MutableList<Position> {
 
             val temp = mutableListOf<Position>()
             for (pos in positions) {
-                val tempPosition = Position(description = pos.description, comment = pos.comment, task = task)
+                val tempPosition = Position(description = pos.description, comment = pos.comment)
                 temp.add(tempPosition)
             }
             return temp

@@ -9,12 +9,13 @@ import com.example.petproject.repository.PositionRepository
 import com.example.petproject.repository.TaskRepository
 import com.example.petproject.services.TaskService
 import com.example.petproject.utils.TaskUtils
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.crossstore.ChangeSetPersister
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
+import org.bson.types.ObjectId
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException
 import org.springframework.stereotype.Service
-import java.time.LocalDate
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
+import reactor.kotlin.core.publisher.switchIfEmpty
+import java.time.Duration
 
 @Service
 class TaskServiceImpl(
@@ -23,92 +24,74 @@ class TaskServiceImpl(
     val pointRepository: PointRepository
 ) : TaskService {
 
-    override fun getAllTasks(): ResponseEntity<List<TaskAnswer>> {
-        val temp = mutableListOf<TaskAnswer>()
-        taskRepository.findAll().forEach { e -> temp.add(TaskUtils.convertTaskToTaskAnswer(e)) }
-        return ResponseEntity.ok(temp)
+    override fun getAllTasks(): Flux<TaskAnswer> {
+        return taskRepository.findAll()
+            .map { e -> TaskUtils.convertTaskToTaskAnswer(e) }.delayElements(Duration.ofSeconds(1))
     }
 
-    override fun getTaskById(taskId: String): ResponseEntity<TaskAnswer> {
-        val task = taskRepository.findById(taskId).orElseThrow { ChangeSetPersister.NotFoundException() }
-        return ResponseEntity.ok().body(TaskUtils.convertTaskToTaskAnswer(task))
-    }
+    override fun getTaskById(taskId: ObjectId): Mono<TaskAnswer> =
+        taskRepository.findById(taskId).map { e -> TaskUtils.convertTaskToTaskAnswer(e) }.switchIfEmpty {
+            Mono.error(
+                NotFoundException()
+            )
+        }
 
-    override fun getTaskAfterDate(date: String): ResponseEntity<List<TaskAnswer>> {
-        val temp = mutableListOf<TaskAnswer>()
-        taskRepository.findTasksAfterDate(LocalDate.parse(date))
-            .forEach { e -> temp.add(TaskUtils.convertTaskToTaskAnswer(e)) }
-        return ResponseEntity.ok(temp)
-    }
 
-    override fun addTask(requestBody: TaskRequest): ResponseEntity<TaskAnswer> {
+//    override fun getTaskAfterDate(date: String): Flux<TaskAnswer> {
+//        val temp = mutableListOf<TaskAnswer>()
+//        taskRepository.findTasksAfterDate(LocalDate.parse(date))
+//            .forEach { e -> temp.add(TaskUtils.convertTaskToTaskAnswer(e)) }
+//        return ResponseEntity.ok(temp)
+//    }
+
+    override fun addTask(requestBody: TaskRequest): Mono<TaskAnswer> {
         val tempTask = Task(
             date = requestBody.date
         )
 
-        val positions = TaskUtils.convertPositionRequestToPosition(requestBody.positions, tempTask)
+        val positions = TaskUtils.convertPositionRequestToPosition(requestBody.positions)
 
         var point: Point? = null
         val tempPoint = pointRepository.findById(requestBody.pointID)
         if (tempPoint.isPresent) {
             point = tempPoint.get()
-            point.taskList?.add(tempTask)
-            pointRepository.save(point)
         }
         tempTask.point = point
         tempTask.positions = positions
 
-        return try {
-            taskRepository.save(tempTask)
-            return ResponseEntity(TaskUtils.convertTaskToTaskAnswer(tempTask), HttpStatus.CREATED)
-        } catch (e: Exception) {
-            ResponseEntity(null, HttpStatus.BAD_GATEWAY)
-        }
+        return taskRepository.save(tempTask).map { e -> TaskUtils.convertTaskToTaskAnswer(e) }
     }
 
-    override fun updateTask(taskId: String, requestBody: TaskRequest): ResponseEntity<TaskAnswer> {
 
-        val task = taskRepository.findById(taskId).orElseThrow { ChangeSetPersister.NotFoundException() }
+    override fun updateTask(taskId: ObjectId, requestBody: TaskRequest): Mono<TaskAnswer> {
 
-        val positions = TaskUtils.convertPositionRequestToPosition(requestBody.positions, task)
+        val tempTask = taskRepository.findById(taskId)
 
+        val positions = TaskUtils.convertPositionRequestToPosition(requestBody.positions)
 
         var point: Point? = null
         val tempPoint = pointRepository.findById(requestBody.pointID)
         if (tempPoint.isPresent) {
             point = tempPoint.get()
-            point.taskList?.add(task)
-            pointRepository.save(point)
         }
 
-        task.date = requestBody.date
-        task.point = point
-        task.positions = positions
-
-        return try {
-            taskRepository.save(task)
-            return ResponseEntity(TaskUtils.convertTaskToTaskAnswer(task), HttpStatus.OK)
-        } catch (e: Exception) {
-            ResponseEntity(null, HttpStatus.BAD_GATEWAY)
+        return tempTask.flatMap {
+            taskRepository.save(it.apply {
+                it.date = requestBody.date
+                it.point = point
+                it.positions = positions
+            }).map { e -> TaskUtils.convertTaskToTaskAnswer(e) }
         }
     }
 
-    override fun deleteTask(taskId: String): ResponseEntity<Unit> {
-
-        val task = taskRepository.findById(taskId).orElseThrow { ChangeSetPersister.NotFoundException() }
-        val posList = positionRepository.findByTaskId(task.id)
-
-        for (pos in posList) {
-            positionRepository.delete(pos)
-        }
-
-        if (task.point != null) {
-            val point = pointRepository.findPointByTaskListContaining(task)
-            pointRepository.delete(point)
-        }
-        taskRepository.delete(task)
-
-        return ResponseEntity.noContent().build()
+    override fun deleteTask(taskId: ObjectId): Mono<Void> {
+        return taskRepository.findById(taskId)
+            .switchIfEmpty {
+                Mono.error(
+                    NotFoundException()
+                )
+            }
+            .flatMap(taskRepository::delete)
 
     }
 }

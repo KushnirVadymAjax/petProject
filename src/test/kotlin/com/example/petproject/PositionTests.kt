@@ -20,45 +20,45 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 @ExtendWith(SpringExtension::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PositionTests{
-    @Autowired
-    private lateinit var restTemplate: TestRestTemplate
-
-    @Autowired
-    private lateinit var positionRepository: PositionRepository
-
-    @LocalServerPort
-    protected var port: Int = 0
-
-    @BeforeEach
-    fun setUp() {
-        positionRepository.deleteAll()
-    }
-
-    private fun getRootUrl(): String = "http://localhost:$port/api/v1/positions"
-
-    @Test
-    fun `should return all positions`() {
-
-
-        val response = restTemplate.getForEntity(
-            getRootUrl(), List::class.java
-        )
-
-        assertEquals(200, response.statusCode.value())
-        assertNotNull(response.body)
-    }
-
-    @Test
-    fun `should delete all positions`() {
-
-
-        val response = restTemplate.exchange(
-            getRootUrl(),
-            HttpMethod.DELETE,
-            HttpEntity(null, HttpHeaders()),
-            ResponseEntity::class.java
-        )
-
-        assertEquals(204, response.statusCode.value())
-    }
+//    @Autowired
+//    private lateinit var restTemplate: TestRestTemplate
+//
+//    @Autowired
+//    private lateinit var positionRepository: PositionRepository
+//
+//    @LocalServerPort
+//    protected var port: Int = 0
+//
+//    @BeforeEach
+//    fun setUp() {
+//        positionRepository.deleteAll()
+//    }
+//
+//    private fun getRootUrl(): String = "http://localhost:$port/api/v1/positions"
+//
+//    @Test
+//    fun `should return all positions`() {
+//
+//
+//        val response = restTemplate.getForEntity(
+//            getRootUrl(), List::class.java
+//        )
+//
+//        assertEquals(200, response.statusCode.value())
+//        assertNotNull(response.body)
+//    }
+//
+//    @Test
+//    fun `should delete all positions`() {
+//
+//
+//        val response = restTemplate.exchange(
+//            getRootUrl(),
+//            HttpMethod.DELETE,
+//            HttpEntity(null, HttpHeaders()),
+//            ResponseEntity::class.java
+//        )
+//
+//        assertEquals(204, response.statusCode.value())
+//    }
 }

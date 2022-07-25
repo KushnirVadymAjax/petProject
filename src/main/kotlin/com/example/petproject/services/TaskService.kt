@@ -2,19 +2,20 @@ package com.example.petproject.services
 
 import com.example.petproject.jsonMapping.answers.TaskAnswer
 import com.example.petproject.jsonMapping.requests.TaskRequest
-import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
+import org.bson.types.ObjectId
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 
 interface TaskService {
-    fun getAllTasks(): ResponseEntity<List<TaskAnswer>>
+    fun getAllTasks(): Flux<TaskAnswer>
 
-    fun getTaskById(taskId: String): ResponseEntity<TaskAnswer>
+    fun getTaskById(taskId: ObjectId): Mono<TaskAnswer>
 
-    fun getTaskAfterDate(date: String): ResponseEntity<List<TaskAnswer>>
+//    fun getTaskAfterDate(date: String): Flux<TaskAnswer>
 
-    fun addTask(requestBody: TaskRequest): ResponseEntity<TaskAnswer>
+    fun addTask(requestBody: TaskRequest): Mono<TaskAnswer>
 
-    fun updateTask(taskId: String, requestBody: TaskRequest): ResponseEntity<TaskAnswer>
+    fun updateTask(taskId: ObjectId, requestBody: TaskRequest): Mono<TaskAnswer>
 
-    fun deleteTask(taskId: String): ResponseEntity<Unit>
+    fun deleteTask(taskId: ObjectId): Mono<Void>
 }

@@ -17,6 +17,5 @@ data class Point(
     var longitude: Double = 0.0,
     var contactPerson: String = "",
     var contactNumber: String = "",
-    var comment: String = "",
-    val taskList: MutableList<Task>? = mutableListOf()
+    var comment: String = ""
 )

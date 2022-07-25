@@ -26,104 +26,104 @@ import java.util.NoSuchElementException
 @ExtendWith(SpringExtension::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PointTests{
-    @Autowired
-    private lateinit var restTemplate: TestRestTemplate
-
-    @Autowired
-    private lateinit var pointRepository: PointRepository
-
-    private val defaultPointId = ObjectId.get()
-
-    @LocalServerPort
-    protected var port: Int = 0
-
-    @BeforeEach
-    fun setUp() {
-        pointRepository.deleteAll()
-    }
-
-    private fun getRootUrl(): String = "http://localhost:$port/api/v1/points"
-
-    private fun saveOnePoint() = pointRepository.save(Point(defaultPointId))
-
-    private fun preparePointRequest(): PointRequest {
-        pointRepository.save(Point(defaultPointId))
-        return PointRequest(defaultPointId.toString(),"adders")
-    }
-
-    @Test
-    fun `should return all points`() {
-        saveOnePoint()
-
-        val response = restTemplate.getForEntity(
-            getRootUrl(), List::class.java
-        )
-
-        assertEquals(200, response.statusCode.value())
-        assertNotNull(response.body)
-        assertEquals(1, response.body?.size)
-    }
-
-    @Test
-    fun `should return single point by id`() {
-        saveOnePoint()
-
-        val response = restTemplate.getForEntity(
-            getRootUrl() + "/$defaultPointId", Task::class.java
-        )
-
-        assertEquals(200, response.statusCode.value())
-        assertNotNull(response.body)
-        assertEquals(defaultPointId, response.body?.id)
-    }
-
-    @Test
-    fun `should create new point`() {
-        val pointRequest = preparePointRequest()
-
-        val response = restTemplate.postForEntity(
-            getRootUrl(), pointRequest, PointAnswer::class.java
-        )
-
-
-        assertEquals(201, response.statusCode.value())
-        assertNotNull(response.body)
-        assertNotNull(response.body?.id)
-    }
-
-    @Test
-    fun `should update existing point`() {
-        saveOnePoint()
-        val pointRequest = preparePointRequest()
-
-        val updateResponse = restTemplate.exchange(
-            getRootUrl() + "/$defaultPointId",
-            HttpMethod.PUT,
-            HttpEntity(pointRequest, HttpHeaders()),
-            PointAnswer::class.java
-        )
-        val updatedPoint = pointRepository.findById(defaultPointId).get()
-
-        assertEquals(200, updateResponse.statusCode.value())
-        assertEquals(defaultPointId, updatedPoint.id)
-        assertEquals(pointRequest.adress,updatedPoint.adress)
-
-    }
-
-    @Test
-    fun `should delete existing point`() {
-        saveOnePoint()
-
-        val delete = restTemplate.exchange(
-            getRootUrl() + "/$defaultPointId",
-            HttpMethod.DELETE,
-            HttpEntity(null, HttpHeaders()),
-            ResponseEntity::class.java
-        )
-
-        assertEquals(204, delete.statusCode.value())
-        assertThrows(NoSuchElementException::class.java) { pointRepository.findById(defaultPointId).get() }
-    }
+//    @Autowired
+//    private lateinit var restTemplate: TestRestTemplate
+//
+//    @Autowired
+//    private lateinit var pointRepository: PointRepository
+//
+//    private val defaultPointId = ObjectId.get()
+//
+//    @LocalServerPort
+//    protected var port: Int = 0
+//
+//    @BeforeEach
+//    fun setUp() {
+//        pointRepository.deleteAll()
+//    }
+//
+//    private fun getRootUrl(): String = "http://localhost:$port/api/v1/points"
+//
+//    private fun saveOnePoint() = pointRepository.save(Point(defaultPointId))
+//
+//    private fun preparePointRequest(): PointRequest {
+//        pointRepository.save(Point(defaultPointId))
+//        return PointRequest(defaultPointId.toString(),"adders")
+//    }
+//
+//    @Test
+//    fun `should return all points`() {
+//        saveOnePoint()
+//
+//        val response = restTemplate.getForEntity(
+//            getRootUrl(), List::class.java
+//        )
+//
+//        assertEquals(200, response.statusCode.value())
+//        assertNotNull(response.body)
+//        assertEquals(1, response.body?.size)
+//    }
+//
+//    @Test
+//    fun `should return single point by id`() {
+//        saveOnePoint()
+//
+//        val response = restTemplate.getForEntity(
+//            getRootUrl() + "/$defaultPointId", Task::class.java
+//        )
+//
+//        assertEquals(200, response.statusCode.value())
+//        assertNotNull(response.body)
+//        assertEquals(defaultPointId, response.body?.id)
+//    }
+//
+//    @Test
+//    fun `should create new point`() {
+//        val pointRequest = preparePointRequest()
+//
+//        val response = restTemplate.postForEntity(
+//            getRootUrl(), pointRequest, PointAnswer::class.java
+//        )
+//
+//
+//        assertEquals(201, response.statusCode.value())
+//        assertNotNull(response.body)
+//        assertNotNull(response.body?.id)
+//    }
+//
+//    @Test
+//    fun `should update existing point`() {
+//        saveOnePoint()
+//        val pointRequest = preparePointRequest()
+//
+//        val updateResponse = restTemplate.exchange(
+//            getRootUrl() + "/$defaultPointId",
+//            HttpMethod.PUT,
+//            HttpEntity(pointRequest, HttpHeaders()),
+//            PointAnswer::class.java
+//        )
+//        val updatedPoint = pointRepository.findById(defaultPointId).get()
+//
+//        assertEquals(200, updateResponse.statusCode.value())
+//        assertEquals(defaultPointId, updatedPoint.id)
+//        assertEquals(pointRequest.adress,updatedPoint.adress)
+//
+//    }
+//
+//    @Test
+//    fun `should delete existing point`() {
+//        saveOnePoint()
+//
+//        val delete = restTemplate.exchange(
+//            getRootUrl() + "/$defaultPointId",
+//            HttpMethod.DELETE,
+//            HttpEntity(null, HttpHeaders()),
+//            ResponseEntity::class.java
+//        )
+//
+//        assertEquals(204, delete.statusCode.value())
+//        assertThrows(NoSuchElementException::class.java) { pointRepository.findById(defaultPointId).get() }
+//    }
 
 
 }
