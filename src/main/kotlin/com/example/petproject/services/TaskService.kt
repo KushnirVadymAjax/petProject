@@ -11,7 +11,7 @@ interface TaskService {
 
     fun getTaskById(taskId: ObjectId): Mono<TaskAnswer>
 
-//    fun getTaskAfterDate(date: String): Flux<TaskAnswer>
+    fun getTaskAfterDate(date: String): Flux<TaskAnswer>
 
     fun addTask(requestBody: TaskRequest): Mono<TaskAnswer>
 

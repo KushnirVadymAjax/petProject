@@ -22,10 +22,10 @@ class TaskController(val taskService: TaskService) {
         return taskService.getTaskById(ObjectId(taskId))
     }
 
-//    @GetMapping("/tasks/getTaskAfterDate/{date}")
-//    fun getTaskAfterDate(@PathVariable(value = "date") date: String): ResponseEntity<List<TaskAnswer>> {
-//        return taskService.getTaskAfterDate(date)
-//    }
+    @GetMapping("/tasks/getTaskAfterDate/{date}")
+    fun getTaskAfterDate(@PathVariable(value = "date") date: String): Flux<TaskAnswer> {
+        return taskService.getTaskAfterDate(date)
+    }
 
     @PostMapping("/tasks")
     fun addTask(@Validated @RequestBody requestBody: TaskRequest): Mono<TaskAnswer> {

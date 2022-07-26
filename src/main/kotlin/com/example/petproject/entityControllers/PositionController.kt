@@ -16,7 +16,6 @@ class PositionController(val positionService: PositionService) {
     @GetMapping("/positions")
     fun getAllPositions(): Flux<PositionAnswer> {
         return positionService.getAllPositions()
-
     }
 
     @DeleteMapping("/positions")

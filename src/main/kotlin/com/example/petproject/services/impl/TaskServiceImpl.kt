@@ -16,6 +16,7 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.switchIfEmpty
 import java.time.Duration
+import java.time.LocalDate
 
 @Service
 class TaskServiceImpl(
@@ -40,12 +41,11 @@ class TaskServiceImpl(
             }
 
 
-//    override fun getTaskAfterDate(date: String): Flux<TaskAnswer> {
-//        val temp = mutableListOf<TaskAnswer>()
-//        taskRepository.findTasksAfterDate(LocalDate.parse(date))
-//            .forEach { e -> temp.add(TaskUtils.convertTaskToTaskAnswer(e)) }
-//        return ResponseEntity.ok(temp)
-//    }
+    override fun getTaskAfterDate(date: String): Flux<TaskAnswer> {
+
+        return taskRepository.findTasksAfterDate(LocalDate.parse(date)).map { TaskUtils.convertTaskToTaskAnswer(it) }
+
+    }
 
     override fun addTask(requestBody: TaskRequest): Mono<TaskAnswer> {
 
