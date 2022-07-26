@@ -9,7 +9,7 @@ import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRep
 class PetProjectApplication
 
 fun main(args: Array<String>) {
-	runApplication<PetProjectApplication>(*args)
+    runApplication<PetProjectApplication>(*args)
 }
 
 

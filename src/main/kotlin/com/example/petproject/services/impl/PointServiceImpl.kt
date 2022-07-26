@@ -5,8 +5,9 @@ import com.example.petproject.jsonMapping.requests.PointRequest
 import com.example.petproject.model.Point
 import com.example.petproject.repository.PointRepository
 import com.example.petproject.services.PointService
+import com.example.petproject.utils.PointUtils
 import org.bson.types.ObjectId
-import org.springframework.data.crossstore.ChangeSetPersister
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -17,76 +18,65 @@ import java.time.Duration
 class PointServiceImpl(val pointRepository: PointRepository) : PointService {
 
     override fun getAllPoints(): Flux<PointAnswer> {
-
-        return pointRepository.findAll()
-            .map { e ->
-                PointAnswer(
-                    e.id.toString(), e.name, e.adress, e.latitude, e.longitude, e.contactPerson
-                )
-            }.delayElements(Duration.ofSeconds(1))
+        return pointRepository.findAll().map {
+            PointUtils.convertPointToPointAnswer(it)
+        }.delayElements(Duration.ofSeconds(1))
     }
 
 
-    override fun getPointById(pointId: ObjectId): Mono<PointAnswer> =
-        pointRepository.findById(pointId).map { e ->
-            PointAnswer(
-                e.id.toString(), e.name, e.adress, e.latitude, e.longitude, e.contactPerson
-            )
-        }.switchIfEmpty {
-            Mono.error(
-                ChangeSetPersister.NotFoundException()
-            )
-        }
+    override fun getPointById(pointId: ObjectId): Mono<PointAnswer> = pointRepository.findById(pointId).map { e ->
+        PointAnswer(
+            e.id.toString(), e.name, e.adress, e.latitude, e.longitude, e.contactPerson
+        )
+    }.switchIfEmpty {
+        Mono.error(
+            NotFoundException()
+        )
+    }
 
     override fun addPoint(requestBody: PointRequest): Mono<PointAnswer> {
-        val point = Point(
-            name = requestBody.name,
-            adress = requestBody.adress,
-            comment = requestBody.comment,
-            contactNumber = requestBody.contactNumber,
-            contactPerson = requestBody.contactPerson,
-            latitude = requestBody.latitude,
-            longitude = requestBody.longitude
-        )
-        return pointRepository.save(point).map { e ->
-            PointAnswer(
-                e.id.toString(), e.name, e.adress, e.latitude, e.longitude, e.contactPerson
+        return pointRepository.save(
+            Point(
+                name = requestBody.name,
+                adress = requestBody.adress,
+                comment = requestBody.comment,
+                contactNumber = requestBody.contactNumber,
+                contactPerson = requestBody.contactPerson,
+                latitude = requestBody.latitude,
+                longitude = requestBody.longitude
             )
+        ).map {
+            PointUtils.convertPointToPointAnswer(it)
         }
     }
 
     override fun updatePoint(pointId: ObjectId, requestBody: PointRequest): Mono<PointAnswer> {
-        val point = pointRepository.findById(pointId)
 
-
-
-        return point.flatMap {
-            pointRepository.save(it.apply {
-                it.adress = requestBody.adress
-                it.comment = requestBody.comment
-                it.contactNumber = requestBody.contactNumber
-                it.name = requestBody.name
-                it.longitude = requestBody.longitude
-                it.latitude = requestBody.latitude
-                it.contactPerson = requestBody.contactPerson
-            })
-        }.map { e ->
-            PointAnswer(
-                e.id.toString(), e.name, e.adress, e.latitude, e.longitude, e.contactPerson
+        return pointRepository.findById(pointId).switchIfEmpty {
+            Mono.error(
+                NotFoundException()
             )
-        }
+        }.then(
+            pointRepository.save(
+                Point(
+                    name = requestBody.name,
+                    adress = requestBody.adress,
+                    comment = requestBody.comment,
+                    contactNumber = requestBody.contactNumber,
+                    contactPerson = requestBody.contactPerson,
+                    latitude = requestBody.latitude,
+                    longitude = requestBody.longitude
+                )
+            )
+        ).map { PointUtils.convertPointToPointAnswer(it) }
     }
 
     override fun deletePoint(pointId: ObjectId): Mono<Void> {
 
-        return pointRepository.findById(pointId)
-            .switchIfEmpty {
-                Mono.error(
-                    ChangeSetPersister.NotFoundException()
-                )
-            }
-            .flatMap(pointRepository::delete)
-
-
+        return pointRepository.findById(pointId).switchIfEmpty {
+            Mono.error(
+                NotFoundException()
+            )
+        }.flatMap(pointRepository::delete)
     }
 }

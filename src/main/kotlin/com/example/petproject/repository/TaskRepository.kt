@@ -5,5 +5,5 @@ import com.example.petproject.mongoTemplate.TaskCustomRepository
 import org.bson.types.ObjectId
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository
 
-interface TaskRepository : ReactiveMongoRepository<Task, ObjectId>,TaskCustomRepository {
+interface TaskRepository : ReactiveMongoRepository<Task, ObjectId>, TaskCustomRepository {
 }

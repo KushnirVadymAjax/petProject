@@ -1,6 +1,5 @@
 package com.example.petproject.utils
 
-import com.example.petproject.jsonMapping.answers.PositionAnswer
 import com.example.petproject.jsonMapping.answers.TaskAnswer
 import com.example.petproject.jsonMapping.requests.PositionRequest
 import com.example.petproject.model.Position
@@ -23,18 +22,9 @@ class TaskUtils() {
                 task.id.toString(),
                 task.date,
                 task.point?.id.toString(),
-                convertPositionsToPositionAnswer(task.positions)
+                PositionUtils.convertPositionsToPositionAnswer(task.positions)
             )
         }
 
-        fun convertPositionsToPositionAnswer(positions: List<Position>): MutableList<PositionAnswer> {
-            val temp = mutableListOf<PositionAnswer>()
-            for (pos in positions) {
-                val tempPosition =
-                    PositionAnswer(id = pos.id.toString(), description = pos.description, comment = pos.comment)
-                temp.add(tempPosition)
-            }
-            return temp
-        }
     }
 }
