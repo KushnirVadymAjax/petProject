@@ -26,7 +26,7 @@ class TaskServiceImpl(
     override fun getAllTasks(): Flux<TaskAnswer> {
         return taskRepository.findAll()
             .map { TaskUtils.convertTaskToTaskAnswer(it) }
-            .delayElements(Duration.ofSeconds(1))
+            .delayElements(Duration.ofSeconds(3))
     }
 
     override fun getTaskById(taskId: ObjectId): Mono<TaskAnswer> =
