@@ -7,6 +7,7 @@ import com.example.petproject.repository.PointRepository
 import com.example.petproject.repository.PositionRepository
 import com.example.petproject.repository.TaskRepository
 import com.example.petproject.services.TaskService
+import com.example.petproject.utils.PositionUtils
 import com.example.petproject.utils.TaskUtils
 import org.bson.types.ObjectId
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException
@@ -48,7 +49,7 @@ class TaskServiceImpl(
 
     override fun addTask(requestBody: TaskRequest): Mono<TaskAnswer> {
 
-        val positions = TaskUtils.convertPositionRequestToPosition(requestBody.positions)
+        val positions = PositionUtils.convertPositionRequestToPosition(requestBody.positions)
 
         return positionRepository.saveAll(Flux.fromIterable(positions))
             .then(pointRepository.findById(ObjectId(requestBody.pointID)))
@@ -66,7 +67,7 @@ class TaskServiceImpl(
 
     override fun updateTask(taskId: ObjectId, requestBody: TaskRequest): Mono<TaskAnswer> {
 
-        val positions = TaskUtils.convertPositionRequestToPosition(requestBody.positions)
+        val positions = PositionUtils.convertPositionRequestToPosition(requestBody.positions)
 
         return taskRepository.findById(taskId)
             .switchIfEmpty {
