@@ -4,6 +4,7 @@ import com.example.petproject.jsonMapping.answers.TaskAnswer
 import com.example.petproject.jsonMapping.requests.TaskRequest
 import com.example.petproject.services.TaskService
 import org.bson.types.ObjectId
+import org.springframework.http.HttpStatus
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 import reactor.core.publisher.Flux
@@ -13,26 +14,31 @@ import reactor.core.publisher.Mono
 @RequestMapping("/api/v1")
 class TaskController(val taskService: TaskService) {
     @GetMapping("/tasks")
+    @ResponseStatus(HttpStatus.OK)
     fun getAllTasks(): Flux<TaskAnswer> {
         return taskService.getAllTasks()
     }
 
     @GetMapping("/tasks/{id}")
+    @ResponseStatus(HttpStatus.OK)
     fun getTaskById(@PathVariable(value = "id") taskId: String): Mono<TaskAnswer> {
         return taskService.getTaskById(ObjectId(taskId))
     }
 
     @GetMapping("/tasks/getTaskAfterDate/{date}")
+    @ResponseStatus(HttpStatus.OK)
     fun getTaskAfterDate(@PathVariable(value = "date") date: String): Flux<TaskAnswer> {
         return taskService.getTaskAfterDate(date)
     }
 
     @PostMapping("/tasks")
+    @ResponseStatus(HttpStatus.CREATED)
     fun addTask(@Validated @RequestBody requestBody: TaskRequest): Mono<TaskAnswer> {
         return taskService.addTask(requestBody)
     }
 
     @PutMapping("/tasks/{id}")
+    @ResponseStatus(HttpStatus.OK)
     fun updateTask(
         @PathVariable(value = "id") taskId: String,
         @Validated @RequestBody requestBody: TaskRequest
@@ -41,6 +47,7 @@ class TaskController(val taskService: TaskService) {
     }
 
     @DeleteMapping("/tasks/{id}")
+    @ResponseStatus(HttpStatus.OK)
     fun deleteTask(@PathVariable(value = "id") taskId: String): Mono<Void> {
         return taskService.deleteTask(ObjectId(taskId))
     }

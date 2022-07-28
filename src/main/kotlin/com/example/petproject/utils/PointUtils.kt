@@ -7,7 +7,7 @@ class PointUtils {
     companion object {
         fun convertPointToPointAnswer(point: Point): PointAnswer {
             return PointAnswer(
-                point.id.toString(), point.name, point.adress, point.latitude, point.longitude, point.contactPerson
+                point.id.toString(), point.name, point.adress, point.latitude, point.longitude, point.contactPerson,point.contactNumber,point.comment
             )
         }
     }

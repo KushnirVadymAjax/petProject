@@ -1,129 +1,133 @@
 package com.example.petproject
 
+
+import com.example.petproject.entityControllers.PointController
 import com.example.petproject.jsonMapping.answers.PointAnswer
 import com.example.petproject.jsonMapping.requests.PointRequest
 import com.example.petproject.model.Point
-import com.example.petproject.model.Task
 import com.example.petproject.repository.PointRepository
+import com.example.petproject.services.impl.PointServiceImpl
 import org.bson.types.ObjectId
-import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito
+import org.mockito.internal.verification.VerificationModeFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
-import org.springframework.boot.test.web.server.LocalServerPort
-import org.springframework.http.HttpEntity
+import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest
+import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.context.annotation.Import
 import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod
-import org.springframework.http.ResponseEntity
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import java.util.NoSuchElementException
+import org.springframework.test.web.reactive.server.WebTestClient
+import reactor.core.publisher.Mono
+import reactor.kotlin.core.publisher.toFlux
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@WebFluxTest(PointController::class)
 @ExtendWith(SpringExtension::class)
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class PointTests{
-//    @Autowired
-//    private lateinit var restTemplate: TestRestTemplate
-//
-//    @Autowired
-//    private lateinit var pointRepository: PointRepository
-//
-//    private val defaultPointId = ObjectId.get()
-//
-//    @LocalServerPort
-//    protected var port: Int = 0
-//
-//    @BeforeEach
-//    fun setUp() {
-//        pointRepository.deleteAll()
-//    }
-//
-//    private fun getRootUrl(): String = "http://localhost:$port/api/v1/points"
-//
-//    private fun saveOnePoint() = pointRepository.save(Point(defaultPointId))
-//
-//    private fun preparePointRequest(): PointRequest {
-//        pointRepository.save(Point(defaultPointId))
-//        return PointRequest(defaultPointId.toString(),"adders")
-//    }
-//
-//    @Test
-//    fun `should return all points`() {
-//        saveOnePoint()
-//
-//        val response = restTemplate.getForEntity(
-//            getRootUrl(), List::class.java
-//        )
-//
-//        assertEquals(200, response.statusCode.value())
-//        assertNotNull(response.body)
-//        assertEquals(1, response.body?.size)
-//    }
-//
-//    @Test
-//    fun `should return single point by id`() {
-//        saveOnePoint()
-//
-//        val response = restTemplate.getForEntity(
-//            getRootUrl() + "/$defaultPointId", Task::class.java
-//        )
-//
-//        assertEquals(200, response.statusCode.value())
-//        assertNotNull(response.body)
-//        assertEquals(defaultPointId, response.body?.id)
-//    }
-//
-//    @Test
-//    fun `should create new point`() {
-//        val pointRequest = preparePointRequest()
-//
-//        val response = restTemplate.postForEntity(
-//            getRootUrl(), pointRequest, PointAnswer::class.java
-//        )
-//
-//
-//        assertEquals(201, response.statusCode.value())
-//        assertNotNull(response.body)
-//        assertNotNull(response.body?.id)
-//    }
-//
-//    @Test
-//    fun `should update existing point`() {
-//        saveOnePoint()
-//        val pointRequest = preparePointRequest()
-//
-//        val updateResponse = restTemplate.exchange(
-//            getRootUrl() + "/$defaultPointId",
-//            HttpMethod.PUT,
-//            HttpEntity(pointRequest, HttpHeaders()),
-//            PointAnswer::class.java
-//        )
-//        val updatedPoint = pointRepository.findById(defaultPointId).get()
-//
-//        assertEquals(200, updateResponse.statusCode.value())
-//        assertEquals(defaultPointId, updatedPoint.id)
-//        assertEquals(pointRequest.adress,updatedPoint.adress)
-//
-//    }
-//
-//    @Test
-//    fun `should delete existing point`() {
-//        saveOnePoint()
-//
-//        val delete = restTemplate.exchange(
-//            getRootUrl() + "/$defaultPointId",
-//            HttpMethod.DELETE,
-//            HttpEntity(null, HttpHeaders()),
-//            ResponseEntity::class.java
-//        )
-//
-//        assertEquals(204, delete.statusCode.value())
-//        assertThrows(NoSuchElementException::class.java) { pointRepository.findById(defaultPointId).get() }
-//    }
+@Import(PointServiceImpl::class)
+class PointTests {
+    @MockBean
+    lateinit var pointRepository: PointRepository
+
+    @Autowired
+    lateinit var webClient: WebTestClient
+
+    @Test
+    fun `should return all points`() {
+        val fPoint = Point(ObjectId.get(), "fPoint", "adress fPoint", 43.124, 32.123, "contact person fPoint")
+        val sPoint = Point(ObjectId.get(), "sPoint", "adress sPoint", 43.124, 32.123, "contact person sPoint")
+
+        val pointList = listOf(fPoint, sPoint).toFlux()
+
+        Mockito.`when`(pointRepository.findAll()).thenReturn(pointList)
+
+        webClient.get().uri("http://localhost:8080/api/v1/points").header(HttpHeaders.ACCEPT, "application/json")
+            .exchange()
+            .expectStatus().isOk
+            .expectBodyList(PointAnswer::class.java)
+
+        Mockito.verify(pointRepository, VerificationModeFactory.times(1)).findAll()
+    }
+
+    @Test
+    fun `should return single point by id`() {
+        val objectId = ObjectId.get()
+
+        val expected = Point(objectId, "name1", "adress1", 23.333, 42.12312, contactPerson = "contactPerson1", contactNumber = "contactNumber1", comment = "comment1")
+
+        Mockito.`when`(pointRepository.findById(objectId)).thenReturn(Mono.just(expected))
+
+        webClient.get().uri("http://localhost:8080/api/v1/points/{id}", objectId)
+            .header(HttpHeaders.ACCEPT, "application/json")
+            .exchange().expectStatus().isOk
+            .expectBody()
+            .jsonPath("$.id").isEqualTo(objectId.toString())
+            .jsonPath("$.adress").isEqualTo(expected.adress)
+            .jsonPath("$.latitude").isEqualTo(expected.latitude)
+            .jsonPath("$.longitude").isEqualTo(expected.longitude)
+            .jsonPath("$.contactPerson").isEqualTo(expected.contactPerson)
+            .jsonPath("$.contactNumber").isEqualTo(expected.contactNumber)
+            .jsonPath("$.comment").isEqualTo(expected.comment)
+
+
+        Mockito.verify(pointRepository).findById(objectId)
+    }
+
+    @Test
+    fun `should create new point`() {
+        val objectId = ObjectId.get()
+
+        val expected = Point(objectId, "name1", "adress1", 23.333, 42.12312, contactPerson = "contactPerson1", contactNumber = "contactNumber1", comment = "comment1")
+
+        Mockito.`when`(pointRepository.save(any(Point::class.java))).thenReturn(Mono.just(expected))
+
+
+        webClient.post().uri("http://localhost:8080/api/v1/points").header(HttpHeaders.ACCEPT, "application/json")
+            .body(Mono.just(expected), PointRequest::class.java)
+            .exchange().expectStatus().isCreated
+            .expectBody()
+            .jsonPath("$.id").isEqualTo(objectId.toString())
+            .jsonPath("$.adress").isEqualTo(expected.adress)
+            .jsonPath("$.latitude").isEqualTo(expected.latitude)
+            .jsonPath("$.longitude").isEqualTo(expected.longitude)
+            .jsonPath("$.contactPerson").isEqualTo(expected.contactPerson)
+            .jsonPath("$.contactNumber").isEqualTo(expected.contactNumber)
+            .jsonPath("$.comment").isEqualTo(expected.comment)
+    }
+
+    @Test
+    fun `should update existing point`() {
+        val objectId = ObjectId.get()
+
+        val request = Point(objectId, "name1", "adress1", 23.333, 42.12312, contactPerson = "contactPerson1", contactNumber = "contactNumber1", comment = "comment1")
+        val expected = Point(objectId, "change name1", "change adress1", 23.333, 42.12312, contactPerson = "change contactPerson1", contactNumber = "change contactNumber1", comment = "change comment1")
+
+        Mockito.`when`(pointRepository.save(any(Point::class.java))).thenReturn(Mono.just(expected))
+
+        Mockito.`when`(pointRepository.findById(objectId)).thenReturn(Mono.just(request))
+
+        webClient.put().uri("http://localhost:8080/api/v1/points/{id}",objectId).header(HttpHeaders.ACCEPT, "application/json")
+            .body(Mono.just(request), PointRequest::class.java)
+            .exchange().expectStatus().isOk
+            .expectBody()
+            .jsonPath("$.id").isEqualTo(objectId.toString())
+            .jsonPath("$.adress").isEqualTo(expected.adress)
+            .jsonPath("$.latitude").isEqualTo(expected.latitude)
+            .jsonPath("$.longitude").isEqualTo(expected.longitude)
+            .jsonPath("$.contactPerson").isEqualTo(expected.contactPerson)
+            .jsonPath("$.contactNumber").isEqualTo(expected.contactNumber)
+            .jsonPath("$.comment").isEqualTo(expected.comment)
+    }
+
+    @Test
+    fun `should delete existing point`() {
+        val objectId = ObjectId.get()
+        val voidReturn = Mono.empty<Void>()
+        Mockito.`when`(pointRepository.deleteById(objectId)).thenReturn(voidReturn)
+
+        webClient.delete().uri("http://localhost:8080/api/v1/points/{id}", objectId).exchange().expectStatus().isOk
+    }
 
 
 }

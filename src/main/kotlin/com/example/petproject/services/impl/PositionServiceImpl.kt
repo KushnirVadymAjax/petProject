@@ -14,9 +14,7 @@ class PositionServiceImpl(val positionRepository: PositionRepository) : Position
 
 
     override fun getAllPositions(): Flux<PositionAnswer> {
-        return positionRepository.findAll()
-            .map { PositionUtils.convertPositionToPositionAnswer(it) }
-            .delayElements(Duration.ofSeconds(1))
+        return positionRepository.findAll().map { PositionUtils.convertPositionToPositionAnswer(it) }
     }
 
     override fun deleteAllPositions(): Mono<Void> {

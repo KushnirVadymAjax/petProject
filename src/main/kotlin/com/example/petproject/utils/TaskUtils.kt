@@ -13,6 +13,5 @@ class TaskUtils() {
                 PositionUtils.convertPositionsToPositionAnswer(task.positions)
             )
         }
-
     }
 }

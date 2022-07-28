@@ -20,14 +20,12 @@ class PointServiceImpl(val pointRepository: PointRepository) : PointService {
     override fun getAllPoints(): Flux<PointAnswer> {
         return pointRepository.findAll().map {
             PointUtils.convertPointToPointAnswer(it)
-        }.delayElements(Duration.ofSeconds(1))
+        }
     }
 
 
-    override fun getPointById(pointId: ObjectId): Mono<PointAnswer> = pointRepository.findById(pointId).map { e ->
-        PointAnswer(
-            e.id.toString(), e.name, e.adress, e.latitude, e.longitude, e.contactPerson
-        )
+    override fun getPointById(pointId: ObjectId): Mono<PointAnswer> = pointRepository.findById(pointId).map {
+        PointUtils.convertPointToPointAnswer(it)
     }.switchIfEmpty {
         Mono.error(
             NotFoundException()
@@ -59,6 +57,7 @@ class PointServiceImpl(val pointRepository: PointRepository) : PointService {
         }.then(
             pointRepository.save(
                 Point(
+                    id = pointId,
                     name = requestBody.name,
                     adress = requestBody.adress,
                     comment = requestBody.comment,
@@ -72,11 +71,6 @@ class PointServiceImpl(val pointRepository: PointRepository) : PointService {
     }
 
     override fun deletePoint(pointId: ObjectId): Mono<Void> {
-
-        return pointRepository.findById(pointId).switchIfEmpty {
-            Mono.error(
-                NotFoundException()
-            )
-        }.flatMap(pointRepository::delete)
+        return pointRepository.deleteById(pointId)
     }
 }

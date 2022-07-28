@@ -2,6 +2,7 @@ package com.example.petproject.services.impl
 
 import com.example.petproject.jsonMapping.answers.TaskAnswer
 import com.example.petproject.jsonMapping.requests.TaskRequest
+import com.example.petproject.model.Point
 import com.example.petproject.model.Task
 import com.example.petproject.repository.PointRepository
 import com.example.petproject.repository.PositionRepository
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.switchIfEmpty
+import reactor.kotlin.core.publisher.toFlux
 import java.time.Duration
 import java.time.LocalDate
 
@@ -28,7 +30,6 @@ class TaskServiceImpl(
     override fun getAllTasks(): Flux<TaskAnswer> {
         return taskRepository.findAll()
             .map { TaskUtils.convertTaskToTaskAnswer(it) }
-            .delayElements(Duration.ofSeconds(3))
     }
 
     override fun getTaskById(taskId: ObjectId): Mono<TaskAnswer> =
@@ -51,7 +52,7 @@ class TaskServiceImpl(
 
         val positions = PositionUtils.convertPositionRequestToPosition(requestBody.positions)
 
-        return positionRepository.saveAll(Flux.fromIterable(positions))
+        return positionRepository.saveAll(positions.toFlux())
             .then(pointRepository.findById(ObjectId(requestBody.pointID)))
             .map {
                 Task(
@@ -68,14 +69,14 @@ class TaskServiceImpl(
     override fun updateTask(taskId: ObjectId, requestBody: TaskRequest): Mono<TaskAnswer> {
 
         val positions = PositionUtils.convertPositionRequestToPosition(requestBody.positions)
-
+        val asda =  pointRepository.findById(ObjectId(requestBody.pointID)).subscribe()
         return taskRepository.findById(taskId)
             .switchIfEmpty {
                 Mono.error(
                     NotFoundException()
                 )
             }
-            .then(positionRepository.saveAll(Flux.fromIterable(positions))
+            .then(positionRepository.saveAll(positions.toFlux())
                 .then(pointRepository.findById(ObjectId(requestBody.pointID)))
                 .map {
                     Task(
@@ -90,12 +91,6 @@ class TaskServiceImpl(
     }
 
     override fun deleteTask(taskId: ObjectId): Mono<Void> {
-        return taskRepository.findById(taskId)
-            .switchIfEmpty {
-                Mono.error(
-                    NotFoundException()
-                )
-            }
-            .flatMap(taskRepository::delete)
+        return taskRepository.deleteById(taskId)
     }
 }
